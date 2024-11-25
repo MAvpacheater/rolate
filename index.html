@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Рулетка</title>
+    <title>Рулетка з візуалізацією</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,19 +13,37 @@
             background-color: #f5f5f5;
         }
         .wheel-container {
-            margin: 50px auto;
             position: relative;
             width: 300px;
             height: 300px;
-            border: 5px solid #333;
+            margin: 50px auto;
             border-radius: 50%;
-            background-color: #fff;
+            border: 5px solid #333;
+            background: conic-gradient(
+                #ffcc00 0% 0.1%,          /* Знижка на 75 грн */
+                #4caf50 0.1% 5.1%,       /* Антистрес */
+                #2196f3 5.1% 10.1%,      /* Головоломки */
+                #e91e63 10.1% 15.1%,     /* Машинка */
+                #9c27b0 15.1% 35.1%,     /* Брелки */
+                #3f51b5 35.1% 100%       /* Брелок Україна */
+            );
+        }
+        .wheel-pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #333;
+            background-color: red;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
         }
         .spin-button {
             margin-top: 20px;
             padding: 10px 20px;
             font-size: 18px;
-            color: #fff;
+            color: white;
             background-color: #007bff;
             border: none;
             border-radius: 5px;
@@ -43,7 +61,9 @@
 </head>
 <body>
     <h1>Рулетка</h1>
-    <div class="wheel-container"></div>
+    <div class="wheel-container">
+        <div class="wheel-pointer"></div>
+    </div>
     <button class="spin-button">Обертати рулетку</button>
     <div class="result"></div>
 
@@ -57,23 +77,38 @@
             { name: "Брелок Україна", chance: 65 },
         ];
 
-        // Функція для вибору випадкового призу на основі шансів
-        function spinWheel() {
-            const resultDiv = document.querySelector(".result");
-            const random = Math.random() * 100;
-            let cumulativeChance = 0;
+        let isSpinning = false;
 
-            for (let prize of prizes) {
-                cumulativeChance += prize.chance;
-                if (random <= cumulativeChance) {
-                    resultDiv.textContent = `Ви виграли: ${prize.name}!`;
-                    return;
+        function spinWheel() {
+            if (isSpinning) return;
+
+            isSpinning = true;
+            const randomDegree = Math.floor(Math.random() * 360 + 360 * 3); // 3 повних оберти + випадкова позиція
+            const wheel = document.querySelector(".wheel-container");
+            const resultDiv = document.querySelector(".result");
+
+            wheel.style.transform = `rotate(${randomDegree}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+
+                // Обчислення сектора
+                const degree = randomDegree % 360;
+                let cumulativeChance = 0;
+                let winningPrize = "";
+
+                for (let i = 0; i < prizes.length; i++) {
+                    cumulativeChance += prizes[i].chance * 3.6; // Приводимо ймовірності до градусів
+                    if (degree <= cumulativeChance) {
+                        winningPrize = prizes[i].name;
+                        break;
+                    }
                 }
-            }
-            resultDiv.textContent = "Спробуйте ще раз!";
+
+                resultDiv.textContent = `Ви виграли: ${winningPrize}!`;
+            }, 3000); // Затримка анімації
         }
 
-        // Додаємо подію на кнопку
         document.querySelector(".spin-button").addEventListener("click", spinWheel);
     </script>
 </body>

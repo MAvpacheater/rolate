@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Рулетка з візуалізацією</title>
+    <title>Рулетка з анімацією</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
+            background-color: #f5f5f5;
             margin: 0;
             padding: 0;
-            background-color: #f5f5f5;
         }
         .wheel-container {
             position: relative;
@@ -18,15 +18,30 @@
             height: 300px;
             margin: 50px auto;
             border-radius: 50%;
-            border: 5px solid #333;
-            background: conic-gradient(
-                #ffcc00 0% 0.1%,          /* Знижка на 75 грн */
-                #4caf50 0.1% 5.1%,       /* Антистрес */
-                #2196f3 5.1% 10.1%,      /* Головоломки */
-                #e91e63 10.1% 15.1%,     /* Машинка */
-                #9c27b0 15.1% 35.1%,     /* Брелки */
-                #3f51b5 35.1% 100%       /* Брелок Україна */
-            );
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .wheel {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            transform: rotate(0deg);
+            transition: transform 3s ease-out;
+        }
+        .wheel-segment {
+            position: absolute;
+            width: 150px;
+            height: 300px;
+            transform-origin: 100% 50%;
+            clip-path: polygon(0 0, 100% 50%, 0 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
         }
         .wheel-pointer {
             position: absolute;
@@ -62,6 +77,9 @@
 <body>
     <h1>Рулетка</h1>
     <div class="wheel-container">
+        <div class="wheel">
+            <!-- Сектори рулетки -->
+        </div>
         <div class="wheel-pointer"></div>
     </div>
     <button class="spin-button">Обертати рулетку</button>
@@ -69,13 +87,34 @@
 
     <script>
         const prizes = [
-            { name: "Знижка на 75 грн", chance: 0.1 },
-            { name: "Антистрес", chance: 5 },
-            { name: "Головоломки", chance: 5 },
-            { name: "Машинка", chance: 5 },
-            { name: "Брелки", chance: 20 },
-            { name: "Брелок Україна", chance: 65 },
+            { name: "Знижка на 75 грн", chance: 0.1, color: "#ffcc00" },
+            { name: "Антистрес", chance: 5, color: "#4caf50" },
+            { name: "Головоломки", chance: 5, color: "#2196f3" },
+            { name: "Машинка", chance: 5, color: "#e91e63" },
+            { name: "Брелки", chance: 20, color: "#9c27b0" },
+            { name: "Брелок Україна", chance: 65, color: "#3f51b5" },
         ];
+
+        const wheel = document.querySelector(".wheel");
+        const resultDiv = document.querySelector(".result");
+
+        // Динамічне створення секторів рулетки
+        let cumulativeAngle = 0;
+        prizes.forEach(prize => {
+            const angle = (prize.chance / 100) * 360;
+            const segment = document.createElement("div");
+            segment.className = "wheel-segment";
+            segment.style.backgroundColor = prize.color;
+            segment.style.transform = `rotate(${cumulativeAngle}deg)`;
+            segment.style.clipPath = "polygon(0 0, 100% 50%, 0 100%)";
+            segment.innerHTML = `
+                <div style="transform: rotate(${angle / 2}deg);">
+                    ${prize.name}<br>${prize.chance}%
+                </div>
+            `;
+            wheel.appendChild(segment);
+            cumulativeAngle += angle;
+        });
 
         let isSpinning = false;
 
@@ -83,22 +122,18 @@
             if (isSpinning) return;
 
             isSpinning = true;
-            const randomDegree = Math.floor(Math.random() * 360 + 360 * 3); // 3 повних оберти + випадкова позиція
-            const wheel = document.querySelector(".wheel-container");
-            const resultDiv = document.querySelector(".result");
-
+            const randomDegree = Math.floor(Math.random() * 360 + 360 * 3); // 3 оберти + випадкова позиція
             wheel.style.transform = `rotate(${randomDegree}deg)`;
 
             setTimeout(() => {
                 isSpinning = false;
 
-                // Обчислення сектора
                 const degree = randomDegree % 360;
                 let cumulativeChance = 0;
                 let winningPrize = "";
 
                 for (let i = 0; i < prizes.length; i++) {
-                    cumulativeChance += prizes[i].chance * 3.6; // Приводимо ймовірності до градусів
+                    cumulativeChance += (prizes[i].chance / 100) * 360;
                     if (degree <= cumulativeChance) {
                         winningPrize = prizes[i].name;
                         break;
@@ -106,7 +141,7 @@
                 }
 
                 resultDiv.textContent = `Ви виграли: ${winningPrize}!`;
-            }, 3000); // Затримка анімації
+            }, 3000); // Затримка для анімації
         }
 
         document.querySelector(".spin-button").addEventListener("click", spinWheel);

@@ -17,9 +17,6 @@
             width: 300px;
             height: 300px;
             margin: 50px auto;
-            border-radius: 50%;
-            overflow: hidden;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
         .wheel {
             position: absolute;
@@ -28,20 +25,6 @@
             border-radius: 50%;
             transform: rotate(0deg);
             transition: transform 3s ease-out;
-        }
-        .wheel-segment {
-            position: absolute;
-            width: 150px;
-            height: 300px;
-            transform-origin: 100% 50%;
-            clip-path: polygon(0 0, 100% 50%, 0 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
-            font-size: 14px;
-            font-weight: bold;
-            text-align: center;
         }
         .wheel-pointer {
             position: absolute;
@@ -71,6 +54,25 @@
             margin-top: 20px;
             font-size: 24px;
             color: #333;
+        }
+        .wheel-segment {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(50% 50%, 100% 0, 100% 100%);
+            transform-origin: 50% 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .segment-text {
+            position: absolute;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff;
         }
     </style>
 </head>
@@ -102,16 +104,20 @@
         let cumulativeAngle = 0;
         prizes.forEach(prize => {
             const angle = (prize.chance / 100) * 360;
+
+            // Створення сегмента
             const segment = document.createElement("div");
             segment.className = "wheel-segment";
             segment.style.backgroundColor = prize.color;
             segment.style.transform = `rotate(${cumulativeAngle}deg)`;
-            segment.style.clipPath = "polygon(0 0, 100% 50%, 0 100%)";
-            segment.innerHTML = `
-                <div style="transform: rotate(${angle / 2}deg);">
-                    ${prize.name}<br>${prize.chance}%
-                </div>
-            `;
+
+            // Додавання тексту
+            const text = document.createElement("div");
+            text.className = "segment-text";
+            text.style.transform = `rotate(${angle / 2}deg)`;
+            text.textContent = `${prize.name}\n${prize.chance}%`;
+            segment.appendChild(text);
+
             wheel.appendChild(segment);
             cumulativeAngle += angle;
         });
